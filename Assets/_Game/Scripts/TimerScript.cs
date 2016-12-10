@@ -2,20 +2,25 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class CountDown : MonoBehaviour
+public class TimerScript : MonoBehaviour
 {
-    float timeLeft = 120.0f;
+    public float timeLeft = 120.0f;
     public bool stop = true;
 
     private float minutes;
     private float seconds;
     public Text text;
 
+    private void Start()
+    {
+        startTimer(timeLeft);
+    }
+
     public void startTimer(float from)
     {
         stop = false;
         timeLeft = from;
-        Update();
+        //Update();
     }
 
     void Update()
@@ -34,7 +39,7 @@ public class CountDown : MonoBehaviour
 
         text.text = string.Format("{0:0}:{1:00}", minutes, seconds);
 
-        GUI.Label(new Rect(10, 10, 250, 100), text.text);
+        //GUI.Label(new Rect(10, 10, 250, 100), text.text);
 
         if (stop == true)
         {

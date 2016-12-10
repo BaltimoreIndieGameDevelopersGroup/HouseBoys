@@ -50,6 +50,11 @@ namespace HouseBoys
             if (m_spriteOrderByY == null) m_spriteOrderByY = gameObject.AddComponent<SpriteOrderByY>();
         }
 
+        private void Start()
+        {
+            m_destinationPosition = transform.position;
+        }
+
         private void Update()
         {
             if (Input.GetMouseButton(0))

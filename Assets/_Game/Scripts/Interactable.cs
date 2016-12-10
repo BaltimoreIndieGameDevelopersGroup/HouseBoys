@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
+using System;
 
 namespace HouseBoys
 {
@@ -13,7 +14,7 @@ namespace HouseBoys
 
         public string playerAnimationTrigger;
 
-        public UnityEvent onInteract = new UnityEvent();
+        public GameObjectUnityEvent onInteract = new GameObjectUnityEvent();
 
         private void OnDestroy()
         {
@@ -22,7 +23,7 @@ namespace HouseBoys
 
         public void Interact(PlayerController playerController)
         {
-            onInteract.Invoke();
+            onInteract.Invoke(playerController.gameObject);
             if (!string.IsNullOrEmpty(playerAnimationTrigger))
             {
                 playerController.GetComponent<Animator>().SetTrigger(playerAnimationTrigger);
