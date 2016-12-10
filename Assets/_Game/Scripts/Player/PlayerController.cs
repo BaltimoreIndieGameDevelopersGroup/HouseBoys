@@ -20,6 +20,8 @@ namespace HouseBoys
         [Tooltip("Tracks which direction the player is facing.")]
         public bool facingLeft = false;
 
+        public Tool currentTool;
+
         public GameObject destinationMarker;
 
         private Rigidbody2D m_rigidbody2D;
