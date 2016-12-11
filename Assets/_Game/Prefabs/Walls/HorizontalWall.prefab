@@ -383,6 +383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114366824648557786
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -395,6 +396,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114413724275102286
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -407,6 +409,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114434591490801970
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -621,6 +624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114814897206506530
 MonoBehaviour:
   m_ObjectHideFlags: 1
