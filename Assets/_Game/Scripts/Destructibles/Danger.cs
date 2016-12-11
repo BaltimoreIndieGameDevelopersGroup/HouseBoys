@@ -16,6 +16,8 @@ namespace HouseBoys
 
         public DangerCategory dangerCategory;
 
+        public float stunDuration = 2;
+
         public UnityEvent onSuffer = new UnityEvent();
 
         public void Check()
@@ -24,6 +26,7 @@ namespace HouseBoys
             if (playerController != null && playerController.IsVulnerableTo(dangerCategory))
             {
                 onSuffer.Invoke();
+                playerController.Stun(stunDuration);
             }
         }
 

@@ -19,9 +19,22 @@ namespace HouseBoys
 
         public TextAsset jsonFile;
 
+        [Header("Borders")]
+        public GameObject horizontalBorder;
+        public GameObject verticalBorder;
+
+        [Header("Walls")]
         public GameObject horizontalWall;
         public GameObject verticalWall;
         public GameObject floor;
+
+        [Header("Objects")]
+        public GameObject bed;
+
+        [Header("Tools")]
+        public GameObject hammer;
+        public GameObject rubberHammer;
+        public GameObject plumbingWrench;
 
         public RoomDef roomDef;
 
@@ -42,6 +55,33 @@ namespace HouseBoys
                     go.transform.SetParent(transform);
                 }
             }
+            
+            // Border:
+            for (int x = 0; x < TilesWide; x++)
+            {
+                if (x % 4 == 0)
+                {
+                    int y = -1;
+                    var go = Instantiate(horizontalBorder, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
+                    go.transform.SetParent(transform);
+                    y = TilesHigh - 1;
+                    go = Instantiate(horizontalBorder, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
+                    go.transform.SetParent(transform);
+                }
+            }
+            for (int y = 0; y < TilesHigh; y ++)
+            {
+                if (y % 3 == 0)
+                {
+                    int x = 0;
+                    var go = Instantiate(verticalWall, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
+                    go.transform.SetParent(transform);
+                    x = TilesWide - 2;
+                    go = Instantiate(verticalWall, new Vector3(0.16f + 0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
+                    go.transform.SetParent(transform);
+                }
+            }
+
 
             // Vertical walls:
             for (var x = 0; x < TilesWide; x++)
@@ -52,9 +92,9 @@ namespace HouseBoys
                     var tileCode = roomDef.tiles[x + y * TilesWide];
                     if (tileCode == "C" || tileCode == "V")
                     {
-                        var go = Instantiate(verticalWall, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
+                        var go = Instantiate(verticalWall, new Vector3(0.16f + 0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2) - 0.48f, 0), Quaternion.identity);
                         go.transform.SetParent(transform);
-                        y -= 2;
+                        y -= 3;
                     }
                     y--;
                 }
@@ -67,17 +107,31 @@ namespace HouseBoys
                 while (x < TilesWide)
                 {
                     var tileCode = roomDef.tiles[x + y * TilesWide];
-                    if (tileCode == "C" || tileCode == "H")
+                    if (tileCode == "H")
                     {
                         var go = Instantiate(horizontalWall, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
                         go.transform.SetParent(transform);
-                        x += 2;
+                        x += 3;
                     }
                     x++;
                 }
             }
 
+            // Tools:
+            InstantiateObject(hammer, UnityEngine.Random.Range(2, TilesWide - 1), UnityEngine.Random.Range(2, TilesHigh - 1));
+            InstantiateObject(rubberHammer, UnityEngine.Random.Range(2, TilesWide - 1), UnityEngine.Random.Range(2, TilesHigh - 1));
+            InstantiateObject(plumbingWrench, UnityEngine.Random.Range(2, TilesWide - 1), UnityEngine.Random.Range(2, TilesHigh - 1));
+
+            // Objects:
+            InstantiateObject(bed, UnityEngine.Random.Range(2, TilesWide - 1), UnityEngine.Random.Range(2, TilesHigh - 1));
+
         }
 
+        private void InstantiateObject(GameObject prefab, int x, int y)
+        {
+            var go = Instantiate(prefab, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2) + 0.16f, 0), Quaternion.identity);
+            go.transform.SetParent(transform);
+
+        }
     }
 }
