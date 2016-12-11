@@ -53,6 +53,9 @@ class Point(object):
     def __sub__(self, other):
         return Point(self._x - other.x, self._y - other.y)
 
+    def clone(self):
+        return Point(self._x, self._y)
+
     def segment_distance(self, other):
         return (other - self).distance
 
@@ -80,6 +83,8 @@ class Rectangle(object):
     def __repr__(self):
         return "[Rect - [{0},{1}] @({2},{3})]".format(self._size.width, self._size.height,
                                                       self._origin.x, self._origin.y,)
+    def clone(self):
+        return Point(self.origin.clone(), self._size.clone())
 
     def overlaps_with(self, other):
         self_top_left = Point(self.origin.x, self.origin.y + self.size.height)
@@ -118,6 +123,9 @@ class Size(object):
     def __repr__(self):
         return "[Size - {0} x {1}]".format(self._width, self._height)
 
+    def clone(self):
+        return Size(self._width, self._height)
+
     @property
     def width(self):
         return self._width
@@ -146,9 +154,10 @@ class Wall(object):
 class RoomPrefab(object):
     ROOM_CONSTRUCTORS = []
 
-    def __init__(self, bounding_boxes, vertices, max_scale=-1):
+    def __init__(self, bounding_boxes, vertices, size, max_scale=-1):
         self._max_scale = max_scale
         self._bounding_boxes = list(bounding_boxes)
+        self._size = size
         self._vertices = list(vertices)
         self._walls = []
         self.generate_walls()
@@ -179,6 +188,10 @@ class RoomPrefab(object):
         return self._max_scale
 
     @property
+    def size(self):
+        return self._size
+
+    @property
     def vertices(self):
         return self._vertices
 
@@ -194,9 +207,10 @@ class RectangleRoom(RoomPrefab):
     def __init__(self, width, height, max_scale):
         width = min(width, max_scale)
         height = min(height, max_scale)
-        bounding_boxes = [Rectangle(Point(0, 0), Size(width, height))]
+        size = Size(width, height)
+        bounding_boxes = [Rectangle(Point(0, 0), size)]
         vertices = [Point(0, 0), Point(0, height - 1), Point(width - 1, height - 1), Point(width - 1, 0)]
-        RoomPrefab.__init__(self, bounding_boxes, vertices, max_scale)
+        RoomPrefab.__init__(self, bounding_boxes, vertices, size, max_scale)
 
 
 class SquareRoom(RectangleRoom):
@@ -217,6 +231,15 @@ class ThreeToTwoRoom(RectangleRoom):
 class TwoToOneRoom(RectangleRoom):
     def __init__(self, scale):
         RectangleRoom.__init__(self, scale * 2, scale, 8)
+
+
+class RandomRoom(object):
+    def __init__(self, bounds):
+        self._bounds = bounds
+
+    @property
+    def bounds(self):
+        return self._bounds
 
 
 ########################################
@@ -273,6 +296,21 @@ class Room(object):
 ########################################
 class Level(object):
     SIZE = Size(60, 40)
+    BOUNDS = Rectangle(Point(0, 0), SIZE)
+    BOTTOM_LEFT = 0
+    TOP_LEFT = 1
+    TOP_RIGHT = 2
+    BOTTOM_RIGHT = 3
+    DECREASE_VERTICAL = 0
+    INCREASE_VERTICAL = 1
+    DECREASE_HORIZONTAL = 0
+    INCREASE_HORIZONTAL = 1
+    HORIZONTAL = 0
+    VERTICAL = 1
+    DIAGONAL = 2
+    BUILD_DIRECTIONS = (HORIZONTAL, VERTICAL, DIAGONAL)
+    # VERTICES = (BOTTOM_LEFT, TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT)
+    VERTICES = (Point(0, 0), Point(0, SIZE.height), Point(SIZE.width, SIZE.height), Point(SIZE.width, 0))
 
     def __init__(self):
         self._rooms = []
@@ -292,6 +330,96 @@ class Level(object):
             if room.overlaps_with(room_to_check):
                 return True
         return False
+
+    def generate_random(self, difficulty=1):
+        print "Level::generate_random()"
+        # wall_width, wall_height = self.generate_wall(3, 10)
+        # start_point = Point(0, 0)
+        # end_point = Point(start_point.x + wall_width, start_point.y + wall_height)
+        # print "  wall start point: ({0},{1}), end point: ({2},{3})".format(start_point.x, start_point.y, end_point.x, end_point.y)
+        # print "  randomly generated wall size: [{0},{1}]".format(wall_width, wall_height)
+        # for row in range(start_point.y, wall_height):
+        #     self._tiles[row][wall_width - 1] = "W"
+        # for col in range(start_point.x, wall_width):
+        #     self._tiles[wall_height - 1][col] = "W"
+        # room = self.build_next_room()
+        # self._rooms.append(room)
+        # self.update_tiles()
+        self.generate_bottom_rooms()
+        self.generate_top_rooms()
+        self.update_tiles()
+
+    def generate_bottom_rooms(self):
+        print "Level::generate_bottom_rooms()"
+        min_horiz_scale = 8
+        max_horiz_scale = 15
+        min_vert_scale = 3
+        max_vert_scale = 6
+        max_total_room_width = random.randint(min_horiz_scale, max_horiz_scale) * 4
+        min_room_width = 16
+        max_room_scale = 6
+        total_room_width = 0
+        room_pos = Point(0, 0)
+        print "  max room width:", max_total_room_width
+        while total_room_width + min_room_width < max_total_room_width:
+            room_height = random.randint(3, 5) * 3
+            room_width = random.randint(4, 6) * 4
+            while total_room_width + min_room_width >= max_total_room_width:
+                room_width = random.randint(4, 6) * 4
+            print "    generating room [{0},{1}] @({2},{3})".format(room_width, room_height, room_pos.x, room_pos.y)
+            bounds = Rectangle(room_pos.clone(), Size(room_width, room_height))
+            self._rooms.append(RandomRoom(bounds))
+            room_pos = Point(room_pos.x + room_width - 1, room_pos.y)
+            total_room_width += room_width
+            print "    total room width:", total_room_width
+
+    def generate_top_rooms(self):
+        print "Level::generate_top_rooms()"
+        min_horiz_scale = 8
+        max_horiz_scale = 15
+        min_vert_scale = 3
+        max_vert_scale = 6
+        max_total_room_width = random.randint(min_horiz_scale, max_horiz_scale) * 4
+        min_room_width = 16
+        max_room_scale = 6
+        total_room_width = 0
+        room_pos = None
+        print "  max room width:", max_total_room_width
+        while total_room_width + min_room_width < max_total_room_width:
+            room_height = random.randint(3, 5) * 3
+            room_width = random.randint(4, 6) * 4
+            while total_room_width + min_room_width >= max_total_room_width:
+                room_width = random.randint(4, 6) * 4
+            if room_pos is None:
+                print "    room pos is None"
+                room_pos_x = Level.BOUNDS.size.width - room_width # - 1
+                room_pos_y = Level.BOUNDS.size.height - room_height # - 1
+            else:
+                print "    room pos: ({0},{1})".format(room_pos.x, room_pos.y)
+                room_pos_x = room_pos.x - room_width + 1
+                room_pos_y = Level.BOUNDS.size.height - room_height # - 1
+            room_pos = Point(room_pos_x, room_pos_y)
+            print "    generating room [{0},{1}] @({2},{3})".format(room_width, room_height, room_pos.x, room_pos.y)
+            bounds = Rectangle(room_pos.clone(), Size(room_width, room_height))
+            self._rooms.append(RandomRoom(bounds))
+            # room_pos = Point(room_pos.x + room_width - 1, room_pos.y)
+            total_room_width += room_width
+            print "    total room width:", total_room_width
+
+    # def build_next_room(self, previous_room=None, direction=DIAGONAL):
+    #     # For now just do diagonal
+    #     # wall_width, wall_height = self.generate_wall(3, 10)
+    #     # room_bounds = Rectangle(position, Size(wall_width, wall_height))
+    #     # print "creating room: [{0},{1}] @({2},{3})".format(wall_width, wall_height, position.x, position.y)
+    #     # return RandomRoom(room_bounds)
+    #     position = Point(0, 0)
+    #     if previous_room is not None:
+    #         position = previous_room.position
+    #     room_size = self.generate_room_size(3, 10)
+    #     return RandomRoom(Rectangle(position.clone(), room_size.clone()))
+
+    def generate_room_size(self, min_scale, max_scale):
+        return Size(random.randint(min_scale, max_scale) * 4, random.randint(min_scale, max_scale) * 3)
 
     def write_level_data(self):
         output_dir = "/Users/mmcclenney/Dropbox/Ludum Dare/test_levels/"
@@ -351,49 +479,32 @@ class Level(object):
 
     def update_tiles(self):
         for room in self._rooms:
-            # print "updating tiles for room"
-            vertices = room.vertices
-            for index in range(len(vertices)):
-                start_index = index
-                end_index = index + 1
-                if end_index >= len(vertices):
-                    end_index = 0
-                start = vertices[start_index]
-                end = vertices[end_index]
-                wall_segment = end - start
-                is_horizontal = True if wall_segment.y == 0 else False
-                is_vertical = not is_horizontal
-                do_decrement = False
-                if is_horizontal:
-                    do_decrement = wall_segment.x < 0
-                else:
-                    do_decrement = wall_segment.y < 0
+            # draw first wall - bottom left -> top left
+            room_pos = room.bounds.origin
+            room_size = room.bounds.size
+            if room_pos.x > 0:
+                col = room_pos.x
+                for row in range(room_pos.y, room_pos.y + room_size.height):
+                    self._tiles[row][col] = "V"
 
-                col = start.x
-                row = start.y
-                # print "  processing segment from ({0},{1}) to ({2},{3}) with distance: {4}".format(start.x, start.y, end.x, end.y, wall_segment.distance)
-                for step in range(int(wall_segment.distance)):
-                    # print "    setting tile at: ({0},{1})".format(col, row)
-                    if is_horizontal:
-                        self._tiles[row][col] = "H"
-                        if do_decrement:
-                            col -= 1
-                        else:
-                            col += 1
-                    else:
-                        self._tiles[row][col] = "V"
-                        if do_decrement:
-                            row -= 1
-                        else:
-                            row += 1
+            # draw second wall - top left -> top right
+            if room_pos.y + room_size.height < (Level.BOUNDS.size.height - 1):
+                row = room_pos.y + room_size.height - 1
+                for col in range(room_pos.x, room_pos.x + room_size.width):
+                    self._tiles[row][col] = "H"
 
-            # vertices = room.vertices
-            # for vertex in vertices:
-        for room in self._rooms:
-            # print "updating tiles for room"
-            vertices = room.vertices
-            for vertex in vertices:
-                self._tiles[vertex.y][vertex.x] = "C"
+            # draw third wall - top right -> bottom right
+            if room_pos.x + room_size.width < (Level.BOUNDS.size.width - 1):
+                col = room_pos.x + room_size.width - 1
+                for row in range(room_pos.y, room_pos.y + room_size.height):
+                    self._tiles[row][col] = "V"
+
+            # draw fourth wall - bottom right -> bottom left
+            if room_pos.y > 0:
+                row = room_pos.y
+                for col in range(room_pos.x, room_pos.x + room_size.width):
+                    self._tiles[row][col] = "H"
+
 
     @property
     def rooms(self):
@@ -405,30 +516,31 @@ class Level(object):
 ########################################
 def generate_level(difficulty=1):
     level = Level()
+    level.generate_random()
 
-    total_rooms = random.randint(4, 6)
-    max_iterations = 10000
-    total_iterations = 0
-    # for room_num in range(1, random.randint(4, 6)):
-    while total_iterations < max_iterations and len(level.rooms) < total_rooms:
-        x = random.randint(0, 50)
-        y = random.randint(0, 30)
-        # room_prefab = RoomPrefab.create_random_room()
-        room_prefab = FourToThreeRoom(random.randint(1, 4))
-        room = Room(Point(x, y), room_prefab)
-        if not level.conflicts_with(room):
-            level.add_room(room)
-
-    # print "does room have conflicts:", level.has_conflicts()
-    level_conflicts = level.get_room_conflicts()
-    print "room conflicts:"
-    for room_index in sorted(level_conflicts):
-        room_conflicts = level_conflicts[room_index]
-        if len(room_conflicts) == 0:
-            print "[{0}]: None".format(room_index)
-        else:
-            room_indexes = ",".join([str(i) for i in level_conflicts[room_index]])
-            print "[{0}]: {1}".format(room_index, room_indexes)
+    # total_rooms = random.randint(4, 6)
+    # max_iterations = 10000
+    # total_iterations = 0
+    # # for room_num in range(1, random.randint(4, 6)):
+    # while total_iterations < max_iterations and len(level.rooms) < total_rooms:
+    #     x = random.randint(0, 50)
+    #     y = random.randint(0, 30)
+    #     # room_prefab = RoomPrefab.create_random_room()
+    #     room_prefab = FourToThreeRoom(random.randint(1, 4))
+    #     room = Room(Point(x, y), room_prefab)
+    #     if not level.conflicts_with(room):
+    #         level.add_room(room)
+    #
+    # # print "does room have conflicts:", level.has_conflicts()
+    # level_conflicts = level.get_room_conflicts()
+    # print "room conflicts:"
+    # for room_index in sorted(level_conflicts):
+    #     room_conflicts = level_conflicts[room_index]
+    #     if len(room_conflicts) == 0:
+    #         print "[{0}]: None".format(room_index)
+    #     else:
+    #         room_indexes = ",".join([str(i) for i in level_conflicts[room_index]])
+    #         print "[{0}]: {1}".format(room_index, room_indexes)
 
     return level
 
@@ -446,7 +558,7 @@ def print_level(difficulty=1):
 def main():
     level = generate_level()
     level.output()
-    level.write_level_data()
+    # level.write_level_data()
 
 
 if __name__ == '__main__':
