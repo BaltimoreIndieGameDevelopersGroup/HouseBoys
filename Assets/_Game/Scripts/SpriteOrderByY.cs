@@ -8,6 +8,8 @@ namespace HouseBoys
 
         public bool isStationary;
 
+        public int offset = 0;
+
         private SpriteRenderer m_spriteRenderer;
 
         private void Awake()
@@ -33,7 +35,7 @@ namespace HouseBoys
 
         void SetSpriteOrder()
         {
-            m_spriteRenderer.sortingOrder = -Mathf.FloorToInt(transform.position.y * 100);
+            m_spriteRenderer.sortingOrder = -Mathf.FloorToInt(transform.position.y * 100) + offset;
         }
     }
 }
