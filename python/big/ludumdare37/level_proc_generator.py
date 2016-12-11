@@ -149,15 +149,86 @@ class Wall(object):
 
 
 ########################################
-# Class: Room
+# Class: Sprite
 ########################################
-class Room(object):
+class Sprite(object):
     def __init__(self, bounds):
         self._bounds = bounds
 
     @property
     def bounds(self):
         return self._bounds
+
+    @property
+    def position(self):
+        return self._bounds.origin
+
+    @position.setter
+    def position(self, new_pos):
+        self._bounds = Rectangle(new_pos.clone(), self._bounds.size.clone())
+
+    @property
+    def size(self):
+        return self._bounds.size
+
+
+########################################
+# Class: Sofa
+########################################
+class Sofa(Sprite):
+    def __init__(self):
+        Sprite.__init__(self, Rectangle(Point(0, 0), Size(12, 8)))
+
+
+########################################
+# Class: Bed
+########################################
+class Bed(Sprite):
+    def __init__(self):
+        Sprite.__init__(self, Rectangle(Point(0, 0), Size(12, 8)))
+
+
+########################################
+# Class: Stove
+########################################
+class Stove(Sprite):
+    def __init__(self):
+        Sprite.__init__(self, Rectangle(Point(0, 0), Size(8, 8)))
+
+
+########################################
+# Class: Room
+########################################
+class Room(Sprite):
+    BATHROOM = 1
+    BEDROOM = 2
+    KITCHEN = 3
+    TYPES = (BATHROOM, BEDROOM, KITCHEN)
+
+    def __init__(self, room_type, bounds):
+        Sprite.__init__(self, bounds)
+        self._type = room_type
+        self._furniture = []
+        self.insert_room_object()
+
+    def insert_room_object(self):
+        furniture = None
+        if Room.BATHROOM == self._type:
+            furniture = Sofa()
+        elif Room.BEDROOM == self._type:
+            furniture = Bed()
+        elif Room.KITCHEN == self._type:
+            furniture = Stove()
+
+        if furniture is not None:
+            min_object_x = 0
+            max_object_x = int(self.size.width - furniture.size.width)
+            min_object_y = 0
+            max_object_y = int(self.size.height - furniture.size.height)
+            x = random.randint(min_object_x, max_object_x)
+            y = random.randint(min_object_y, max_object_y)
+            furniture.position = Point(x, y)
+            self._furniture.append(furniture)
 
     # NOTE: This is not the same as a bounding box,
     #       the width and height are decremented by one to fit within the 0-based coords of the map
@@ -170,6 +241,14 @@ class Room(object):
                 Point(origin.x + size.width - 1, origin.y + size.height - 1),
                 Point(origin.x + size.width - 1, origin.y)]
 
+    @property
+    def furniture(self):
+        return self._furniture
+
+    @property
+    def type(self):
+        return self._type
+
 
 ########################################
 # Class: Level
@@ -180,7 +259,7 @@ class Level(object):
 
     def __init__(self):
         self._rooms = []
-        self._tiles = [["*" for x in range(Level.SIZE.width)] for y in range(Level.SIZE.height)]
+        self._tiles = [["W" for x in range(Level.SIZE.width)] for y in range(Level.SIZE.height)]
 
     def conflicts_with(self, room_to_check):
         for room in self._rooms:
@@ -210,7 +289,8 @@ class Level(object):
                 room_width = random.randint(4, 6) * 4
             print "    generating room [{0},{1}] @({2},{3})".format(room_width, room_height, room_pos.x, room_pos.y)
             bounds = Rectangle(room_pos.clone(), Size(room_width, room_height))
-            self._rooms.append(Room(bounds))
+            room_type = random.choice(Room.TYPES)
+            self._rooms.append(Room(room_type, bounds))
             room_pos = Point(room_pos.x + room_width - 1, room_pos.y)
             total_room_width += room_width
             print "    total room width:", total_room_width
@@ -240,7 +320,8 @@ class Level(object):
             room_pos = Point(room_pos_x, room_pos_y)
             print "    generating room [{0},{1}] @({2},{3})".format(room_width, room_height, room_pos.x, room_pos.y)
             bounds = Rectangle(room_pos.clone(), Size(room_width, room_height))
-            self._rooms.append(Room(bounds))
+            room_type = random.choice(Room.TYPES)
+            self._rooms.append(Room(room_type, bounds))
             total_room_width += room_width
             print "    total room width:", total_room_width
 
@@ -308,6 +389,17 @@ class Level(object):
             # draw first wall - bottom left -> top left
             room_pos = room.bounds.origin
             room_size = room.bounds.size
+            room_tile = "W"
+            if Room.BATHROOM == room.type or Room.KITCHEN == room.type:
+                room_tile = "S"
+            elif Room.BEDROOM == room.type:
+                room_tile = "C"
+
+            room_end = Point(room_pos.x + room_size.width, room_pos.y + room_size.height)
+            for row in range(room_pos.y, room_end.y):
+                for col in range(room_pos.x, room_end.x):
+                    self._tiles[row][col] = room_tile
+
             if room_pos.x > 0:
                 col = room_pos.x
                 for row in range(room_pos.y, room_pos.y + room_size.height):
@@ -339,6 +431,19 @@ class Level(object):
                     continue
                 self._tiles[corner.y][corner.x] = "X"
 
+            for furniture in room.furniture:
+                furniture_sprite = None
+                if isinstance(furniture, Bed):
+                    furniture_sprite = "B"
+                elif isinstance(furniture, Sofa):
+                    furniture_sprite = "O"
+                elif isinstance(furniture, Stove):
+                    furniture_sprite = "R"
+                if furniture_sprite is not None:
+                    row = room.position.y + furniture.position.y
+                    col = room.position.x + furniture.position.x
+                    self._tiles[row][col] = furniture_sprite
+
     @property
     def rooms(self):
         return self._rooms
@@ -366,7 +471,7 @@ def print_level(difficulty=1):
 def main():
     level = generate_level()
     level.output()
-    level.write_level_data()
+    # level.write_level_data()
 
 
 if __name__ == '__main__':
