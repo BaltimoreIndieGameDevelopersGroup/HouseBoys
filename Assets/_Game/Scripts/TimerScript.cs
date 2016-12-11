@@ -43,7 +43,8 @@ public class TimerScript : MonoBehaviour
 
         if (stop == true)
         {
-            SceneManager.LoadScene("gameOver");
+            SceneManager.LoadScene("gameOver", LoadSceneMode.Additive);
+            Destroy(this);
         }
     }
 }

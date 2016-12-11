@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: fb7f2474e4b935949a5ec45537e510e7
-timeCreated: 1481414567
+timeCreated: 1481474281
 licenseType: Pro
 TextureImporter:
   fileIDToRecycleName:
@@ -22,8 +22,8 @@ TextureImporter:
     21300030: player_boy_walk_15
     21300032: playerAttack1
     21300034: playerAttack2
-    21300036: player_boy_walk_18
-    21300038: player_boy_walk_19
+    21300036: playerZap1
+    21300038: playerZap2
     21300040: player_boy_walk_20
     21300042: player_boy_walk_21
     21300044: player_boy_walk_22
@@ -155,7 +155,7 @@ TextureImporter:
   textureFormat: 1
   maxTextureSize: 2048
   textureSettings:
-    filterMode: -1
+    filterMode: 0
     aniso: -1
     mipBias: -1
     wrapMode: 1
@@ -456,7 +456,7 @@ TextureImporter:
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: player_boy_walk_18
+      name: playerZap1
       rect:
         serializedVersion: 2
         x: 128
@@ -469,7 +469,7 @@ TextureImporter:
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: player_boy_walk_19
+      name: playerZap2
       rect:
         serializedVersion: 2
         x: 192

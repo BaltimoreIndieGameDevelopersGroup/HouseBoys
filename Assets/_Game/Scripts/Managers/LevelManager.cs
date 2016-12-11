@@ -14,7 +14,11 @@ namespace HouseBoys
 
         public int wallsLeft = 0;
 
+        public int totalWalls = 0;
+
         public UnityEngine.UI.Text wallsLeftText;
+
+        public UnityEngine.UI.Slider wallSlider;
 
         private void Awake()
         {
@@ -26,7 +30,9 @@ namespace HouseBoys
             if (category == DestructibleCategory.Wall)
             {
                 wallsLeft++;
-                wallsLeftText.text = wallsLeft.ToString();
+                totalWalls = Mathf.Max(totalWalls, wallsLeft);
+                wallSlider.maxValue = totalWalls;
+                UpdateScore();
             }
         }
 
@@ -36,7 +42,7 @@ namespace HouseBoys
             {
                 case DestructibleCategory.Wall:
                     wallsLeft--;
-                    wallsLeftText.text = wallsLeft.ToString();
+                    UpdateScore();
                     if (wallsLeft <= 0) Win();
                     break;
                 case DestructibleCategory.Penalty:
@@ -44,6 +50,12 @@ namespace HouseBoys
                 case DestructibleCategory.Bonus:
                     break;
             }
+        }
+
+        public void UpdateScore()
+        {
+            wallsLeftText.text = wallsLeft.ToString();
+            wallSlider.value = totalWalls - wallsLeft;
         }
 
         public void Win()

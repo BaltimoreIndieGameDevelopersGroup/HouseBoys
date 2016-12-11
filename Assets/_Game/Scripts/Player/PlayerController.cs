@@ -62,6 +62,8 @@ namespace HouseBoys
             m_stunnedTimeLeft = Mathf.Max(0, m_stunnedTimeLeft - Time.deltaTime);
             if (IsStunned()) return;
 
+            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
+
             if (Input.GetMouseButton(0))
             {
                 m_destinationPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -84,6 +86,7 @@ namespace HouseBoys
                         {
                             hitInteractable.Interact(this);
                         }
+                        return;
                     }
                 }
             }
