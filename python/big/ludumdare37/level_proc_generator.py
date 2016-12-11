@@ -1,8 +1,11 @@
 # Company: Zanzo Studios - http://zanzostudios.com
 # Author: Michael McClenney at 16:34 on 12/10/2016.
 
+import json
 import math
+import os
 import random
+import uuid
 
 # Level:
 #   1. What % should be walls (destroyable objects)
@@ -37,6 +40,12 @@ class Point(object):
 
     def __div__(self, scale):
         return Point(self._x / scale, self._y / scale)
+
+    def __eq__(self, other):
+        return self._x == other.x and self._y == other.y
+
+    def __hash__(self):
+        return hash("{0}_{1}".format(self._x, self._y))
 
     def __mult__(self, scale):
         return Point(self._x * scale, self._y * scale)
@@ -195,6 +204,11 @@ class SquareRoom(RectangleRoom):
         RectangleRoom.__init__(self, scale, scale, 8)
 
 
+class FourToThreeRoom(RectangleRoom):
+    def __init__(self, scale):
+        RectangleRoom.__init__(self, scale * 4, scale * 3, 40)
+
+
 class ThreeToTwoRoom(RectangleRoom):
     def __init__(self, scale):
         RectangleRoom.__init__(self, scale * 3, scale * 2, 8)
@@ -273,6 +287,37 @@ class Level(object):
         self._rooms.append(room)
         self.update_tiles()
 
+    def conflicts_with(self, room_to_check):
+        for room in self._rooms:
+            if room.overlaps_with(room_to_check):
+                return True
+        return False
+
+    def write_level_data(self):
+        output_dir = "/Users/mmcclenney/Dropbox/Ludum Dare/test_levels/"
+        filename = "{0}.json".format(uuid.uuid4())
+        output_filespec = os.path.join(output_dir, filename)
+
+        assert os.path.exists(output_dir)
+        assert not os.path.exists(output_filespec)
+
+        tiles = []
+        for row in self._tiles:
+            tiles.extend(row)
+
+        json_props = {
+            "number": 1,
+            "timer": 60,
+            "difficulty": 0,
+            "rows": Level.SIZE.height,
+            "columns": Level.SIZE.width,
+            "tiles": tiles
+        }
+
+        print "writing output file to:", output_filespec
+        with open(output_filespec, "w") as outfile:
+            json.dump(json_props, outfile, sort_keys=True, indent=4)
+
     def get_room_conflicts(self):
         room_conflicts = {}
         for first_room_index in range(len(self._rooms)):
@@ -328,18 +373,27 @@ class Level(object):
                 row = start.y
                 # print "  processing segment from ({0},{1}) to ({2},{3}) with distance: {4}".format(start.x, start.y, end.x, end.y, wall_segment.distance)
                 for step in range(int(wall_segment.distance)):
-                    self._tiles[row][col] = "W"
                     # print "    setting tile at: ({0},{1})".format(col, row)
                     if is_horizontal:
+                        self._tiles[row][col] = "H"
                         if do_decrement:
                             col -= 1
                         else:
                             col += 1
                     else:
+                        self._tiles[row][col] = "V"
                         if do_decrement:
                             row -= 1
                         else:
                             row += 1
+
+            # vertices = room.vertices
+            # for vertex in vertices:
+        for room in self._rooms:
+            # print "updating tiles for room"
+            vertices = room.vertices
+            for vertex in vertices:
+                self._tiles[vertex.y][vertex.x] = "C"
 
     @property
     def rooms(self):
@@ -352,12 +406,18 @@ class Level(object):
 def generate_level(difficulty=1):
     level = Level()
 
-    for room_num in range(1, 5):
+    total_rooms = random.randint(4, 6)
+    max_iterations = 10000
+    total_iterations = 0
+    # for room_num in range(1, random.randint(4, 6)):
+    while total_iterations < max_iterations and len(level.rooms) < total_rooms:
         x = random.randint(0, 50)
         y = random.randint(0, 30)
-        room_prefab = RoomPrefab.create_random_room()
+        # room_prefab = RoomPrefab.create_random_room()
+        room_prefab = FourToThreeRoom(random.randint(1, 4))
         room = Room(Point(x, y), room_prefab)
-        level.add_room(room)
+        if not level.conflicts_with(room):
+            level.add_room(room)
 
     # print "does room have conflicts:", level.has_conflicts()
     level_conflicts = level.get_room_conflicts()
@@ -386,6 +446,7 @@ def print_level(difficulty=1):
 def main():
     level = generate_level()
     level.output()
+    level.write_level_data()
 
 
 if __name__ == '__main__':
