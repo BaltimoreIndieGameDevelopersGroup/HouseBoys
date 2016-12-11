@@ -29,12 +29,27 @@ import random
 ########################################
 class Point(object):
     def __init__(self, x, y):
-        self._x = x
-        self._y = y
+        self._x = int(x)
+        self._y = int(y)
 
-    def distance(self, other):
-        segment = Point(other.x - self._x, other.y - self._y)
-        return math.sqrt(math.pow(segment.x, 2) + math.pow(segment.y, 2))
+    def __add__(self, other):
+        return Point(self._x + other.x, self._y + other.y)
+
+    def __div__(self, scale):
+        return Point(self._x / scale, self._y / scale)
+
+    def __mult__(self, scale):
+        return Point(self._x * scale, self._y * scale)
+
+    def __sub__(self, other):
+        return Point(self._x - other.x, self._y - other.y)
+
+    def segment_distance(self, other):
+        return (other - self).distance
+
+    @property
+    def distance(self):
+        return math.sqrt(math.pow(self.x, 2) + math.pow(self.y, 2))
 
     @property
     def x(self):
@@ -53,6 +68,10 @@ class Rectangle(object):
         self._origin = Point(origin.x, origin.y)
         self._size = Size(size.width, size.height)
 
+    def __repr__(self):
+        return "[Rect - [{0},{1}] @({2},{3})]".format(self._size.width, self._size.height,
+                                                      self._origin.x, self._origin.y,)
+
     def overlaps_with(self, other):
         self_top_left = Point(self.origin.x, self.origin.y + self.size.height)
         self_bottom_right = Point(self.origin.x + self.size.width, self.origin.y)
@@ -67,8 +86,8 @@ class Rectangle(object):
         return True
 
     def clone_at_position(self, position):
-        new_origin = Point(self._origin.x + position.x, self._origin.y + position.y)
-        return Rectangle(new_origin, self._size)
+        # new_origin = Point(self._origin.x + position.x, self._origin.y + position.y)
+        return Rectangle(self._origin + position, self._size)
 
     @property
     def origin(self):
@@ -84,8 +103,11 @@ class Rectangle(object):
 ########################################
 class Size(object):
     def __init__(self, width, height):
-        self._width = width
-        self._height = height
+        self._width = int(width)
+        self._height = int(height)
+
+    def __repr__(self):
+        return "[Size - {0} x {1}]".format(self._width, self._height)
 
     @property
     def width(self):
@@ -110,23 +132,34 @@ class Wall(object):
 
 
 ########################################
-# Class: RoomDimensions
+# Class: RoomPrefab
 ########################################
-class RoomDimensions(object):
+class RoomPrefab(object):
+    ROOM_CONSTRUCTORS = []
+
     def __init__(self, bounding_boxes, vertices, max_scale=-1):
         self._max_scale = max_scale
-        self._bounding_boxes = bounding_boxes[:]
-        self._vertices = vertices[:]
+        self._bounding_boxes = list(bounding_boxes)
+        self._vertices = list(vertices)
         self._walls = []
-        self._room_constructors = (SquareRoom, ThreeToTwoRoom, TwoToOneRoom)
         self.generate_walls()
 
     def generate_walls(self):
         pass
 
     @staticmethod
+    def initialize_room_constructors():
+        RoomPrefab.ROOM_CONSTRUCTORS.append(SquareRoom)
+        RoomPrefab.ROOM_CONSTRUCTORS.append(ThreeToTwoRoom)
+        RoomPrefab.ROOM_CONSTRUCTORS.append(TwoToOneRoom)
+
+    @staticmethod
     def create_random_room():
-        scale = random.randint(1, 4)
+        if len(RoomPrefab.ROOM_CONSTRUCTORS) == 0:
+            RoomPrefab.initialize_room_constructors()
+        room_ctor = random.choice(RoomPrefab.ROOM_CONSTRUCTORS)
+        print "room_ctor:", room_ctor
+        return room_ctor(random.randint(4, 8))
 
     @property
     def bounding_boxes(self):
@@ -137,15 +170,24 @@ class RoomDimensions(object):
         return self._max_scale
 
     @property
+    def vertices(self):
+        return self._vertices
+
+    @property
     def walls(self):
         return self._walls
 
 
-class RectangleRoom(RoomDimensions):
+# +--------------------------------------
+# Class: Pre-Defined Rooms & Base Classes
+# +--------------------------------------
+class RectangleRoom(RoomPrefab):
     def __init__(self, width, height, max_scale):
+        width = min(width, max_scale)
+        height = min(height, max_scale)
         bounding_boxes = [Rectangle(Point(0, 0), Size(width, height))]
-        vertices = [Point(0, 0), Point(0, height), Point(width, height), Point(width, 0)]
-        RoomDimensions.__init__(self, bounding_boxes, vertices, max_scale)
+        vertices = [Point(0, 0), Point(0, height - 1), Point(width - 1, height - 1), Point(width - 1, 0)]
+        RoomPrefab.__init__(self, bounding_boxes, vertices, max_scale)
 
 
 class SquareRoom(RectangleRoom):
@@ -163,24 +205,23 @@ class TwoToOneRoom(RectangleRoom):
         RectangleRoom.__init__(self, scale * 2, scale, 8)
 
 
-
 ########################################
 # Class: Room
 ########################################
 class Room(object):
-    def __init__(self, position=None, dimensions=None):
-        self._dimensions = dimensions
+    def __init__(self, position=None, prefab=None):
+        self._prefab = prefab
         self._position = position
         self._total_wall_length = 0
 
     def calculate_total_wall_length(self):
         self._total_wall_length = 0
 
-        if self._dimensions is not None:
-            for index in range(1, len(self._dimensions.vertices)):
-                v1 = self._dimensions.vertices[index - 1]
-                v2 = self._dimensions.vertices[index]
-                self._total_wall_length += v1.distance(v2)
+        if self._prefab is not None:
+            for index in range(1, len(self._prefab.vertices)):
+                v1 = self._prefab.vertices[index - 1]
+                v2 = self._prefab.vertices[index]
+                self._total_wall_length += v1.segment_distance(v2)
 
     def overlaps_with(self, other):
         self_bounding_boxes = self.bounding_boxes
@@ -193,46 +234,103 @@ class Room(object):
 
     @property
     def bounding_boxes(self):
-        return [rect.clone_at_position(self._position) for rect in self._dimensions.bounding_boxes]
+        return [rect.clone_at_position(self._position) for rect in self._prefab.bounding_boxes]
 
     @property
-    def dimensions(self):
-        return self._dimensions
+    def prefab(self):
+        return self._prefab
 
-    @dimensions.setter
-    def dimensions(self, dimensions):
-        self._dimensions = dimensions
+    @prefab.setter
+    def prefab(self, prefab):
+        self._prefab = prefab
         self.calculate_total_wall_length()
 
     @property
     def position(self):
         return self._position
 
+    @property
+    def vertices(self):
+        return [self._position + vertex for vertex in self._prefab.vertices]
+
 
 ########################################
 # Class: Level
 ########################################
 class Level(object):
+    SIZE = Size(60, 40)
+
     def __init__(self):
-        self._size = Size(60, 40)
         self._rooms = []
-        self._tiles = [["*" for x in range(self._size.width)] for y in range(self._size.height)]
+        self._tiles = [["*" for x in range(Level.SIZE.width)] for y in range(Level.SIZE.height)]
+        # print "rows:", len(self._tiles)
+        # print "cols:", len(self._tiles[0])
 
     def add_room(self, room):
+        # print "adding room at: (", room.position.x, ",", room.position.y, ")"
+        print "adding room at: ({0}, {1})".format(room.position.x, room.position.y)
+        print "   room dimensions: [{0}]".format(room.bounding_boxes[0])
         self._rooms.append(room)
+        self.update_tiles()
 
     def output(self):
-        for column in self._tiles:
-            tile_row = ""
-            for tile in column:
-                tile_row += tile
+        print "total columns:", len(self._tiles[0])
+
+        col_markers = " "
+        for col in range(len(self._tiles[0])):
+            col_markers += str(col % 10)
+        print col_markers
+
+        for row in reversed(range(len(self._tiles))):
+            tile_row = str(row % 10)
+            for col in range(len(self._tiles[row])):
+                tile_row += self._tiles[row][col]
             print tile_row
 
-    def size(self):
-        return self._size
+        col_markers = " "
+        for col in range(len(self._tiles[0])):
+            col_markers += str(col % 10)
+        print col_markers
+
+    def update_tiles(self):
+        for room in self._rooms:
+            # print "updating tiles for room"
+            vertices = room.vertices
+            for index in range(len(vertices)):
+                start_index = index
+                end_index = index + 1
+                if end_index >= len(vertices):
+                    end_index = 0
+                start = vertices[start_index]
+                end = vertices[end_index]
+                wall_segment = end - start
+                is_horizontal = True if wall_segment.y == 0 else False
+                is_vertical = not is_horizontal
+                do_decrement = False
+                if is_horizontal:
+                    do_decrement = wall_segment.x < 0
+                else:
+                    do_decrement = wall_segment.y < 0
+
+                col = start.x
+                row = start.y
+                # print "  processing segment from ({0},{1}) to ({2},{3}) with distance: {4}".format(start.x, start.y, end.x, end.y, wall_segment.distance)
+                for step in range(int(wall_segment.distance)):
+                    self._tiles[row][col] = "W"
+                    # print "    setting tile at: ({0},{1})".format(col, row)
+                    if is_horizontal:
+                        if do_decrement:
+                            col -= 1
+                        else:
+                            col += 1
+                    else:
+                        if do_decrement:
+                            row -= 1
+                        else:
+                            row += 1
 
     @property
-    def room(self):
+    def rooms(self):
         return self._rooms
 
 
@@ -241,6 +339,14 @@ class Level(object):
 ########################################
 def generate_level(difficulty=1):
     level = Level()
+
+    for room_num in range(1, 5):
+        x = random.randint(0, 50)
+        y = random.randint(0, 30)
+        room_prefab = RoomPrefab.create_random_room()
+        room = Room(Point(x, y), room_prefab)
+        level.add_room(room)
+
     return level
 
 
