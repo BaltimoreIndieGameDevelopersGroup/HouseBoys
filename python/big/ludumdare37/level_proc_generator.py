@@ -471,6 +471,7 @@ def print_level(difficulty=1):
 def main():
     level = generate_level()
     level.output()
+    # Uncomment this to write level data to file
     # level.write_level_data()
 
 
