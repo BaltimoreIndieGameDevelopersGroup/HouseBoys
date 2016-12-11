@@ -1,12 +1,12 @@
 fileFormatVersion: 2
 guid: 11a87371148535f4cb6d0bd0047ff159
-timeCreated: 1481407211
+timeCreated: 1481487439
 licenseType: Pro
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Floors_0
-    21300002: Floors_1
-    21300004: Floors_2
+    21300000: carpet
+    21300002: wood
+    21300004: tile
     21300006: Floors_3
     21300008: Floors_4
     21300010: Floors_5
@@ -102,40 +102,40 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Floors_0
+      name: carpet
       rect:
         serializedVersion: 2
         x: 0
         y: 32
         width: 32
         height: 32
-      alignment: 0
+      alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: Floors_1
+      name: wood
       rect:
         serializedVersion: 2
         x: 32
         y: 32
         width: 32
         height: 32
-      alignment: 0
+      alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: Floors_2
+      name: tile
       rect:
         serializedVersion: 2
         x: 64
         y: 32
         width: 32
         height: 32
-      alignment: 0
+      alignment: 6
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
@@ -149,7 +149,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -162,7 +162,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -175,7 +175,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -188,7 +188,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
@@ -201,7 +201,7 @@ TextureImporter:
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       tessellationDetail: 0
