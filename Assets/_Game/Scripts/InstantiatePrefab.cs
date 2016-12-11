@@ -8,7 +8,7 @@ namespace HouseBoys
 
         public void InstantiateHere(GameObject prefab)
         {
-            var instance = Instantiate(prefab, transform.position, transform.rotation);
+            Instantiate(prefab, transform.position, transform.rotation);
         }
  
     }

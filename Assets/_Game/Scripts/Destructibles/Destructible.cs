@@ -5,8 +5,19 @@ using System.Collections;
 
 namespace HouseBoys
 {
+
+    public enum DestructibleCategory
+    {
+        Wall,
+        Bonus,
+        Penalty
+    }
+
     public class Destructible : MonoBehaviour
     {
+
+        public DestructibleCategory category = DestructibleCategory.Wall;
+
 
         [Tooltip("Current health.")]
         public int health = 100;
@@ -40,6 +51,7 @@ namespace HouseBoys
 
         void Start()
         {
+            LevelManager.instance.AddDestructible(category);
             m_playerController = FindObjectOfType<PlayerController>();
             healthCanvas.gameObject.SetActive(false);
             healthSlider.maxValue = health;
@@ -100,6 +112,7 @@ namespace HouseBoys
             onDestroy.Invoke();
             if (destroyedParticlePrefab != null) Instantiate(destroyedParticlePrefab, transform.position, transform.rotation);
             Destroy(gameObject);
+            LevelManager.instance.RemoveDestructible(category);
         }
 
     }
