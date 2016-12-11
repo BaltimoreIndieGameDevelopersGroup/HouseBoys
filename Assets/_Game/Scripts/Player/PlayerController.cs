@@ -40,6 +40,8 @@ namespace HouseBoys
         [SerializeField]
         private List<Interactable> m_nearbyInteractables = new List<Interactable>();
 
+        private float m_stunnedTimeLeft = 0;
+
         private void Awake()
         {
             m_rigidbody2D = GetComponent<Rigidbody2D>();
@@ -57,6 +59,9 @@ namespace HouseBoys
 
         private void Update()
         {
+            m_stunnedTimeLeft = Mathf.Max(0, m_stunnedTimeLeft - Time.deltaTime);
+            if (IsStunned()) return;
+
             if (Input.GetMouseButton(0))
             {
                 m_destinationPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -65,14 +70,33 @@ namespace HouseBoys
             if (Input.GetMouseButtonUp(0))
             {
                 var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                var hit = Physics2D.Raycast(ray.origin, ray.direction, Mathf.Infinity, 1 << 8);
-                m_destinationInteractable = (hit.collider != null) ? hit.collider.GetComponent<Interactable>() : null;
-                InteractWithNearbyInteractables();
+                var hits = Physics2D.RaycastAll(ray.origin, ray.direction, Mathf.Infinity, 1 << Interactable.InteractionLayer);
+                foreach (var hit in hits)
+                {
+                    var hitInteractable = hit.collider.GetComponent<Interactable>();
+                    if (hitInteractable != null)
+                    {
+                        if (!m_nearbyInteractables.Contains(hitInteractable))
+                        {
+                            m_destinationInteractable = hitInteractable;
+                        }
+                        else
+                        {
+                            hitInteractable.Interact(this);
+                        }
+                    }
+                }
             }
         }
 
         private void FixedUpdate()
         {
+            if (IsStunned())
+            {
+                m_rigidbody2D.velocity = Vector2.zero;
+                return;
+            }
+
             // Move the character:
             var direction = m_destinationPosition - new Vector2(transform.position.x, transform.position.y);
             var move = new Vector2(Mathf.Abs(direction.x) > 0.1f ? Mathf.Sign(m_destinationPosition.x - transform.position.x) * maxHorizontalSpeed : 0, 
@@ -99,14 +123,17 @@ namespace HouseBoys
             if (newInteractable == null) return;
             m_nearbyInteractables.Add(newInteractable);
             newInteractable.interactableDestroyed += OnInteractableDestroyed;
-            if (newInteractable == m_destinationInteractable) newInteractable.Interact(this);
+            if (newInteractable == m_destinationInteractable)
+            {
+                m_destinationInteractable.Interact(this);
+                m_destinationInteractable = null;
+            }
         }
 
         private void OnTriggerExit2D(Collider2D other)
         {
             var oldInteractable = other.GetComponent<Interactable>();
-            if (oldInteractable == null) return;
-            m_nearbyInteractables.Remove(oldInteractable);
+            if (oldInteractable != null) m_nearbyInteractables.Remove(oldInteractable);
         }
 
         private void OnInteractableDestroyed(Interactable interactable)
@@ -114,12 +141,32 @@ namespace HouseBoys
             m_nearbyInteractables.Remove(interactable);
         }
 
-        private void InteractWithNearbyInteractables()
+        public void UseTool(Tool tool)
         {
-            for (int i = 0; i < m_nearbyInteractables.Count; i++)
-            {
-                m_nearbyInteractables[i].Interact(this);
-            }
+            currentTool = tool;
+        }
+
+        public int GetToolDamage(Destructible destructible)
+        {
+            return (currentTool == null) ? 10 : currentTool.damage;
+        }
+
+        public bool IsVulnerableTo(DangerCategory dangerCategory)
+        {
+            if (dangerCategory == DangerCategory.None) return false;
+            if (currentTool == null) return true;
+            return currentTool.protectsAgainst != dangerCategory;
+        }
+
+        public void Stun(float duration)
+        {
+            m_stunnedTimeLeft = duration;
+        }
+
+        public bool IsStunned()
+        {
+            m_animator.SetBool(RunParameter, false);
+            return m_stunnedTimeLeft > 0.01;
         }
 
     }

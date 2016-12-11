@@ -1,11 +1,11 @@
-﻿using UnityEngine;
-using UnityEngine.Events;
-using System;
+﻿//using UnityEngine;
+//using UnityEngine.Events;
+//using System;
 
-namespace HouseBoys
-{
+//namespace HouseBoys
+//{
 
-    [Serializable]
-    public class GameObjectUnityEvent : UnityEvent<GameObject> { }
+//    [Serializable]
+//    public class GameObjectUnityEvent : UnityEvent<GameObject> { }
 
-}
+//}

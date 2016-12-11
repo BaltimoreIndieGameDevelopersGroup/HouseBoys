@@ -11,6 +11,9 @@ namespace HouseBoys
         [Tooltip("Current health.")]
         public int health = 100;
 
+        public float invulnerableDuration = 0.5f;
+
+        public UnityEvent onTakeDamage = new UnityEvent();
         public UnityEvent onDestroy = new UnityEvent();
 
         [Tooltip("Instantiate this prefab when destroyed.")]
@@ -23,6 +26,7 @@ namespace HouseBoys
         public float healthBarVisibleDuration = 1;
 
         private PlayerController m_playerController;
+        private bool m_isInvulnerable;
        
         [Serializable]
         public class SpriteByHealth
@@ -53,7 +57,12 @@ namespace HouseBoys
 
         public void TakeDamage()
         {
-            health -= 10;
+            if (m_isInvulnerable)
+            {
+                ShowHealthBar();
+                return;
+            }
+            health -= m_playerController.GetToolDamage(this);
             UpdateSprite();
             if (health <= 0)
             {
@@ -62,7 +71,15 @@ namespace HouseBoys
             else
             {
                 ShowHealthBar();
+                m_isInvulnerable = true;
+                Invoke("BecomeVulnerable", invulnerableDuration);
             }
+            onTakeDamage.Invoke();
+        }
+
+        private void BecomeVulnerable()
+        {
+            m_isInvulnerable = false;
         }
 
         public void ShowHealthBar()

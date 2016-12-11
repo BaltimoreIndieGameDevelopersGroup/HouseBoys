@@ -10,11 +10,13 @@ namespace HouseBoys
     public class Interactable : MonoBehaviour
     {
 
+        public const int InteractionLayer = 8;
+
         public event OnInteractableDestroyed interactableDestroyed = delegate{};
 
         public string playerAnimationTrigger;
 
-        public GameObjectUnityEvent onInteract = new GameObjectUnityEvent();
+        public UnityEvent onInteract = new UnityEvent();
 
         private void OnDestroy()
         {
@@ -23,7 +25,7 @@ namespace HouseBoys
 
         public void Interact(PlayerController playerController)
         {
-            onInteract.Invoke(playerController.gameObject);
+            onInteract.Invoke();
             if (!string.IsNullOrEmpty(playerAnimationTrigger))
             {
                 playerController.GetComponent<Animator>().SetTrigger(playerAnimationTrigger);
