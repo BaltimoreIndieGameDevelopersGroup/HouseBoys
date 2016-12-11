@@ -21,7 +21,7 @@ namespace HouseBoys
         {
             var audioSource = GetComponent<AudioSource>();
             if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.PlayOneShot(audio);
+            if (audioSource.enabled) audioSource.PlayOneShot(audio);
         }
 
         public void StunPlayer(float seconds)
