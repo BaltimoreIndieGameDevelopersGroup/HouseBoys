@@ -385,6 +385,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114042248422418710
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -445,6 +446,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114231013252186940
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -496,6 +498,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dangerCategory: 2
+  stunDuration: 2
   onSuffer:
     m_PersistentCalls:
       m_Calls:
@@ -536,6 +539,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114432810487675258
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -738,6 +742,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isStationary: 1
+  offset: 1
 --- !u!114 &114683909416987152
 MonoBehaviour:
   m_ObjectHideFlags: 1
