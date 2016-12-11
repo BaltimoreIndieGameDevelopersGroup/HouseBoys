@@ -273,6 +273,18 @@ class Level(object):
         self._rooms.append(room)
         self.update_tiles()
 
+    def get_room_conflicts(self):
+        room_conflicts = {}
+        for first_room_index in range(len(self._rooms)):
+            room_conflicts[first_room_index] = []
+            for second_room_index in range(first_room_index + 1, len(self._rooms)):
+                first_room = self._rooms[first_room_index]
+                second_room = self._rooms[second_room_index]
+                if first_room.overlaps_with(second_room):
+                    room_conflicts[first_room_index].append(second_room_index)
+
+        return room_conflicts
+
     def output(self):
         print "total columns:", len(self._tiles[0])
 
@@ -346,6 +358,17 @@ def generate_level(difficulty=1):
         room_prefab = RoomPrefab.create_random_room()
         room = Room(Point(x, y), room_prefab)
         level.add_room(room)
+
+    # print "does room have conflicts:", level.has_conflicts()
+    level_conflicts = level.get_room_conflicts()
+    print "room conflicts:"
+    for room_index in sorted(level_conflicts):
+        room_conflicts = level_conflicts[room_index]
+        if len(room_conflicts) == 0:
+            print "[{0}]: None".format(room_index)
+        else:
+            room_indexes = ",".join([str(i) for i in level_conflicts[room_index]])
+            print "[{0}]: {1}".format(room_index, room_indexes)
 
     return level
 
