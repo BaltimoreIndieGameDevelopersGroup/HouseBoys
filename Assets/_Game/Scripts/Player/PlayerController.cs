@@ -92,6 +92,8 @@ namespace HouseBoys
             }
         }
 
+        private bool runTrue; // hacky quick fix.
+
         private void FixedUpdate()
         {
             if (IsStunned())
@@ -106,8 +108,13 @@ namespace HouseBoys
                 Mathf.Abs(direction.y) > 0.1f ? Mathf.Sign(m_destinationPosition.y - transform.position.y) * maxVerticalSpeed : 0);
             m_rigidbody2D.velocity = move.magnitude > 0.5f ? move : Vector2.zero;
 
-            // Update the animator:
-            m_animator.SetBool(RunParameter, move.magnitude > 0.5f);
+            var newRunTrue = move.magnitude > 0.5f;
+            if (newRunTrue != runTrue)
+            {
+                runTrue = newRunTrue;
+                // Update the animator:
+                m_animator.SetBool(RunParameter, newRunTrue);//  move.magnitude > 0.5f);
+            }
 
             // Flip the character if necessary:
             var needToFlip = ((move.x < 0 && !facingLeft) || (move.x > 0 && facingLeft));
@@ -163,12 +170,12 @@ namespace HouseBoys
 
         public void Stun(float duration)
         {
+            m_animator.SetBool(RunParameter, false);
             m_stunnedTimeLeft = duration;
         }
 
         public bool IsStunned()
         {
-            m_animator.SetBool(RunParameter, false);
             return m_stunnedTimeLeft > 0.01;
         }
 

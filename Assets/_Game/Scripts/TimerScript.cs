@@ -2,30 +2,32 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class TimerScript : MonoBehaviour
+namespace HouseBoys
 {
-    public float timeLeft = 120.0f;
-    public bool stop = true;
-
-    private float minutes;
-    private float seconds;
-    public Text text;
-
-    private void Start()
+    public class TimerScript : MonoBehaviour
     {
-        startTimer(timeLeft);
-    }
+        public float timeLeft = 120.0f;
+        public float warningTime = 10f;
+        public bool stop = true;
 
-    public void startTimer(float from)
-    {
-        stop = false;
-        timeLeft = from;
-        //Update();
-    }
+        private float minutes;
+        private float seconds;
+        public Text text;
 
-    void Update()
-    {
-        timeLeft -= Time.deltaTime;
+        private void Start()
+        {
+            startTimer(timeLeft);
+        }
+
+        public void startTimer(float from)
+        {
+            stop = false;
+            timeLeft = from;
+        }
+
+        void Update()
+        {
+            timeLeft -= Time.deltaTime;
 
             minutes = Mathf.Floor(timeLeft / 60);
             seconds = timeLeft % 60;
@@ -37,14 +39,24 @@ public class TimerScript : MonoBehaviour
                 seconds = 0;
             }
 
-        text.text = string.Format("{0:0}:{1:00}", minutes, seconds);
+            text.text = string.Format("{0:0}:{1:00}", minutes, seconds);
+            if (timeLeft < warningTime) text.text = "<color=red>" + text.text + "</color>";
 
-        //GUI.Label(new Rect(10, 10, 250, 100), text.text);
-
-        if (stop == true)
-        {
-            SceneManager.LoadScene("gameOver", LoadSceneMode.Additive);
-            Destroy(this);
+            if (stop == true)
+            {
+                var levelManager = FindObjectOfType<LevelManager>();
+                if (levelManager.AreWinConditionsTrue())
+                {
+                    levelManager.Win();
+                }
+                else
+                {
+                    SceneManager.LoadScene("gameOver", LoadSceneMode.Additive);
+                }
+                GetComponent<AudioSource>().Stop();
+                Destroy(this);
+                
+            }
         }
     }
 }

@@ -58,11 +58,16 @@ namespace HouseBoys
             wallSlider.value = totalWalls - wallsLeft;
         }
 
+        public bool AreWinConditionsTrue()
+        {
+            return (totalWalls == 0) || (wallsLeft < (totalWalls / 3));
+        }
+
         public void Win()
         {
-            Debug.Log("WIN!");
             UnityEngine.SceneManagement.SceneManager.LoadScene("win", UnityEngine.SceneManagement.LoadSceneMode.Additive);
         }
+
     }
 
 }

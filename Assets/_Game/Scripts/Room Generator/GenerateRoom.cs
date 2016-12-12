@@ -20,10 +20,7 @@ namespace HouseBoys
         public TextAsset[] jsonFiles;
 
         public bool randomLevels;
-
-        [Header("Borders")]
-        public GameObject horizontalBorder;
-        public GameObject verticalBorder;
+        public int specificLevelNumber = 0;
 
         [Header("Walls")]
         public GameObject horizontalWall;
@@ -50,11 +47,13 @@ namespace HouseBoys
         public RoomDef roomDef;
 
         private const int TilesWide = 60;
-        public const int TilesHigh = 40;
+        private const int TilesHigh = 40;
+
+        //private const string 
 
         void Start()
         {
-            var jsonFile = randomLevels ? jsonFiles[UnityEngine.Random.Range(0, jsonFiles.Length)] : jsonFiles[0];
+            var jsonFile = randomLevels ? jsonFiles[UnityEngine.Random.Range(0, jsonFiles.Length)] : jsonFiles[specificLevelNumber];
 
             roomDef = JsonUtility.FromJson<RoomDef>(jsonFile.text);
 
@@ -68,33 +67,6 @@ namespace HouseBoys
                 }
             }
 
-            //// Border:
-            //for (int x = 0; x < TilesWide; x++)
-            //{
-            //    if (x % 4 == 0)
-            //    {
-            //        int y = -1;
-            //        var go = Instantiate(horizontalBorder, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
-            //        go.transform.SetParent(transform);
-            //        y = TilesHigh - 1;
-            //        go = Instantiate(horizontalBorder, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
-            //        go.transform.SetParent(transform);
-            //    }
-            //}
-            //for (int y = 0; y < TilesHigh; y ++)
-            //{
-            //    if (y % 3 == 0)
-            //    {
-            //        int x = 0;
-            //        var go = Instantiate(verticalWall, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
-            //        go.transform.SetParent(transform);
-            //        x = TilesWide - 2;
-            //        go = Instantiate(verticalWall, new Vector3(0.16f + 0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2), 0), Quaternion.identity);
-            //        go.transform.SetParent(transform);
-            //    }
-            //}
-
-
             // Vertical walls:
             for (var x = 0; x < TilesWide; x++)
             {
@@ -102,7 +74,7 @@ namespace HouseBoys
                 while (y < TilesHigh)
                 {
                     var tileCode = roomDef.tiles[x + y * TilesWide];
-                    if (tileCode == "asdasdsa" || tileCode == "V")
+                    if (tileCode == "X" || tileCode == "V")
                     {
                         InstantiateTile(tileCode, x + 1, y);
                         y += 3;
@@ -111,7 +83,7 @@ namespace HouseBoys
                 }
             }
 
-            // Horizontal walls:
+            // Horizontal walls & objects:
             for (var y = 0; y < TilesHigh; y++)
             {
                 var x = 0;
@@ -123,6 +95,10 @@ namespace HouseBoys
                         InstantiateTile(tileCode, x, y, true);
                         x += 3;
                     }
+                    if (tileCode == "B" || tileCode == "T" || tileCode == "R" || tileCode == "O")
+                    {
+                        InstantiateTile(tileCode, x, y);
+                    }
                     x++;
                 }
             }
@@ -132,9 +108,6 @@ namespace HouseBoys
             InstantiateTool("2");
             InstantiateTool("3");
             
-            // Objects:
-            //InstantiateObject(bed, UnityEngine.Random.Range(2, TilesWide - 1), UnityEngine.Random.Range(2, TilesHigh - 1));
-
         }
 
         private GameObject GetTilePrefab(string tileCode, bool doingHoriz)
@@ -178,12 +151,14 @@ namespace HouseBoys
         {
             if (tileCode == "B" || tileCode == "T" || tileCode == "R" || tileCode == "O")
             {
-                var prefab1 = (tileCode == "T") ? tileFloor : carpetFloor; ;
-                var go1 = Instantiate(prefab1, new Vector3(0.16f * (x - TilesWide / 2), 0.16f * (y - TilesHigh / 2) + 0.16f, 0), Quaternion.identity);
-                go1.transform.SetParent(transform);
-
+                InstantiatePrefab((tileCode == "T") ? tileFloor : carpetFloor, x, y);
             }
             var prefab = GetTilePrefab(tileCode, doingHoriz);
+            InstantiatePrefab(prefab, x, y);
+        }
+
+        private void InstantiatePrefab(GameObject prefab, int x, int y)
+        {
             float sx = (-((TilesWide / 2) * 0.16f)) + x * 0.16f;
             float sy = (-((TilesHigh / 2) * 0.16f)) + y * 0.16f;
             var go = Instantiate(prefab, new Vector3(sx, sy, 0), Quaternion.identity);
